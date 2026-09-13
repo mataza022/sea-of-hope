@@ -10,6 +10,8 @@ import {
   CheckCircle,
   Phone,
 } from "lucide-react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function DonatePage() {
   const [amount, setAmount] = useState(500);
@@ -17,12 +19,40 @@ export default function DonatePage() {
     "one-time"
   );
   const [purpose, setPurpose] = useState("general");
+  const [donorInfo, setDonorInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In the future, this will connect to Stripe/M-Pesa
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      await addDoc(collection(db, "donations"), {
+        amount,
+        frequency,
+        purpose,
+        donorName: donorInfo.name,
+        donorEmail: donorInfo.email,
+        donorPhone: donorInfo.phone,
+        timestamp: serverTimestamp(),
+        status: "pending",
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Error saving donation:", err);
+      setError(
+        "There was an error processing your donation. Please try again or contact us directly."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const impactOptions = [
@@ -186,6 +216,10 @@ export default function DonatePage() {
                     <input
                       type="text"
                       required
+                      value={donorInfo.name}
+                      onChange={(e) =>
+                        setDonorInfo({ ...donorInfo, name: e.target.value })
+                      }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="Your name"
                     />
@@ -197,6 +231,10 @@ export default function DonatePage() {
                     <input
                       type="email"
                       required
+                      value={donorInfo.email}
+                      onChange={(e) =>
+                        setDonorInfo({ ...donorInfo, email: e.target.value })
+                      }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="you@example.com"
                     />
@@ -207,6 +245,10 @@ export default function DonatePage() {
                     </label>
                     <input
                       type="tel"
+                      value={donorInfo.phone}
+                      onChange={(e) =>
+                        setDonorInfo({ ...donorInfo, phone: e.target.value })
+                      }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="07XX XXX XXX"
                     />
@@ -214,13 +256,22 @@ export default function DonatePage() {
                 </div>
               </div>
 
+              {error && (
+                <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
               {/* Submit */}
               <button
                 type="submit"
-                className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition"
+                disabled={loading}
+                className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Heart size={18} className="inline mr-2" />
-                Donate KSh {amount.toLocaleString()}
+                {loading
+                  ? "Processing..."
+                  : `Donate KSh ${amount.toLocaleString()}`}
               </button>
 
               <p className="text-center text-sm text-gray-500">
