@@ -9,10 +9,14 @@ import {
   Send,
   Shield,
 } from "lucide-react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function GetHelpPage() {
   const [formStep, setFormStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -25,8 +29,24 @@ export default function GetHelpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In the future, this will connect to Firebase
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      await addDoc(collection(db, "help_requests"), {
+        ...formData,
+        timestamp: serverTimestamp(),
+        status: "new",
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Error saving help request:", err);
+      setError(
+        "There was an error submitting your request. Please call us directly at 0727 328 122."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -272,6 +292,13 @@ export default function GetHelpPage() {
                     </span>
                   </label>
                 </div>
+
+                {error && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <div className="flex gap-4">
                   <button
                     type="button"
@@ -282,10 +309,11 @@ export default function GetHelpPage() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex-1 hover:bg-green-700 transition"
+                    disabled={loading}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex-1 hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send size={18} className="inline mr-2" />
-                    Submit — I Need Help
+                    {loading ? "Submitting..." : "Submit — I Need Help"}
                   </button>
                 </div>
               </div>
