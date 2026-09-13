@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,8 +19,24 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In the future, this will connect to Firebase
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        ...formData,
+        timestamp: serverTimestamp(),
+        read: false,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Error saving message:", err);
+      setError(
+        "There was an error sending your message. Please try again or email us directly at seaofhopeofficial@gmail.com."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -189,12 +209,19 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {error && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition"
+                  disabled={loading}
+                  className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={18} className="inline mr-2" />
-                  Send Message
+                  {loading ? "Sending..." : "Send Message"}
                 </button>
               </form>
             )}
@@ -202,7 +229,6 @@ export default function ContactPage() {
 
           {/* Map & Hours */}
           <div className="space-y-6">
-            {/* Map */}
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4">Our Location</h2>
               <div className="rounded-xl overflow-hidden">
@@ -220,7 +246,6 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Office Hours */}
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <Clock size={20} className="mr-2 text-[#007eb4]" />
@@ -242,7 +267,6 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Quick Contact */}
             <div className="bg-[#005a8a] text-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4">Quick Contact</h2>
               <div className="space-y-3">
