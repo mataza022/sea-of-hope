@@ -29,7 +29,6 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
@@ -112,7 +111,6 @@ export function Header() {
         {/* Top Bar - Language & Search */}
         <div className="bg-[#005a8a] text-white">
           <div className="container flex justify-between items-center h-10">
-            {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => setLanguageOpen(!languageOpen)}
@@ -146,7 +144,6 @@ export function Header() {
               )}
             </div>
 
-            {/* Search & Donate */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
@@ -165,7 +162,6 @@ export function Header() {
             </div>
           </div>
 
-          {/* Search Bar */}
           {searchOpen && (
             <div className="bg-white py-3 px-4 border-b">
               <div className="container">
@@ -203,7 +199,6 @@ export function Header() {
         {/* Main Header */}
         <div className="container">
           <div className="flex justify-between items-center h-16 md:h-20">
-            {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center">
                 <img
@@ -222,7 +217,6 @@ export function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
               <Link
                 href="/"
@@ -231,7 +225,6 @@ export function Header() {
                 {t.home}
               </Link>
 
-              {/* Services Dropdown */}
               <div className="relative group">
                 <button className="px-4 py-2 text-gray-700 hover:text-[#007eb4] font-medium text-sm border-b-2 border-transparent group-hover:border-[#007eb4] transition flex items-center">
                   {t.services}
@@ -250,7 +243,6 @@ export function Header() {
                 </div>
               </div>
 
-              {/* Youth Dropdown */}
               <div className="relative group">
                 <button className="px-4 py-2 text-gray-700 hover:text-[#007eb4] font-medium text-sm border-b-2 border-transparent group-hover:border-[#007eb4] transition flex items-center">
                   {t.youth}
@@ -283,7 +275,7 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* Mobile Menu Button - Animated Hamburger */}
+            {/* Animated Hamburger Button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden relative w-10 h-10 flex items-center justify-center text-gray-700 hover:text-[#007eb4] transition-colors"
@@ -311,10 +303,12 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Navigation - Slide-in Panel */}
+      {/* Mobile Navigation - Slides from RIGHT */}
       <div
         className={`fixed inset-0 z-[60] lg:hidden transition-opacity duration-300 ${
-          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          mobileOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
       >
         {/* Backdrop */}
@@ -323,7 +317,7 @@ export function Header() {
           onClick={() => setMobileOpen(false)}
         />
 
-        {/* Slide-in Panel */}
+        {/* Slide-in Panel - From RIGHT */}
         <div
           className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
             mobileOpen ? "translate-x-0" : "translate-x-full"
@@ -353,22 +347,24 @@ export function Header() {
 
           {/* Panel Content */}
           <div className="flex-1 overflow-y-auto py-2">
-            {/* Home Link */}
             <Link
               href="/"
               onClick={() => setMobileOpen(false)}
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "50ms" : "0ms" }}
             >
               {t.home}
             </Link>
 
-            {/* Services Expandable */}
             <div
               className={`transition-all duration-300 ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "100ms" : "0ms" }}
             >
@@ -396,7 +392,9 @@ export function Header() {
                     onClick={() => setMobileOpen(false)}
                     className="block px-10 py-3 text-gray-600 hover:text-[#007eb4] text-sm transition-colors"
                     style={{
-                      transitionDelay: servicesExpanded ? `${index * 30}ms` : "0ms",
+                      transitionDelay: servicesExpanded
+                        ? `${index * 30}ms`
+                        : "0ms",
                     }}
                   >
                     {link.label}
@@ -405,10 +403,11 @@ export function Header() {
               </div>
             </div>
 
-            {/* Youth Expandable */}
             <div
               className={`transition-all duration-300 ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "150ms" : "0ms" }}
             >
@@ -445,36 +444,39 @@ export function Header() {
               </div>
             </div>
 
-            {/* About Link */}
             <Link
               href="/about"
               onClick={() => setMobileOpen(false)}
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "200ms" : "0ms" }}
             >
               {t.about}
             </Link>
 
-            {/* Get Help Link */}
             <Link
               href="/get-help"
               onClick={() => setMobileOpen(false)}
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "250ms" : "0ms" }}
             >
               {t.getHelp}
             </Link>
 
-            {/* Contact Link */}
             <Link
               href="/contact"
               onClick={() => setMobileOpen(false)}
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
-                mobileOpen ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0"
+                mobileOpen
+                  ? "translate-x-0 opacity-100"
+                  : "translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "300ms" : "0ms" }}
             >
@@ -482,7 +484,6 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Panel Footer - Donate & Call Buttons */}
           <div
             className={`p-4 border-t bg-gray-50 space-y-2 transition-all duration-300 ${
               mobileOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
