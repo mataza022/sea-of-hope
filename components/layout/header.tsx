@@ -108,7 +108,7 @@ export function Header() {
           scrolled ? "shadow-md" : "shadow-sm"
         }`}
       >
-        {/* Top Bar - Language & Search */}
+        {/* Top Bar */}
         <div className="bg-[#005a8a] text-white">
           <div className="container flex justify-between items-center h-10">
             <div className="relative">
@@ -275,7 +275,6 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* Animated Hamburger Button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden relative w-10 h-10 flex items-center justify-center text-gray-700 hover:text-[#007eb4] transition-colors"
@@ -303,7 +302,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Navigation - Slides from RIGHT */}
+      {/* Mobile Navigation - Slides from LEFT */}
       <div
         className={`fixed inset-0 z-[60] lg:hidden transition-opacity duration-300 ${
           mobileOpen
@@ -317,10 +316,10 @@ export function Header() {
           onClick={() => setMobileOpen(false)}
         />
 
-        {/* Slide-in Panel - From RIGHT */}
+        {/* Slide-in Panel - From LEFT (changed) */}
         <div
-          className={`absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-            mobileOpen ? "translate-x-0" : "translate-x-full"
+          className={`absolute top-0 left-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           {/* Panel Header */}
@@ -353,7 +352,7 @@ export function Header() {
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "50ms" : "0ms" }}
             >
@@ -364,7 +363,7 @@ export function Header() {
               className={`transition-all duration-300 ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "100ms" : "0ms" }}
             >
@@ -407,7 +406,7 @@ export function Header() {
               className={`transition-all duration-300 ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "150ms" : "0ms" }}
             >
@@ -450,7 +449,7 @@ export function Header() {
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "200ms" : "0ms" }}
             >
@@ -463,7 +462,7 @@ export function Header() {
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "250ms" : "0ms" }}
             >
@@ -476,7 +475,7 @@ export function Header() {
               className={`flex items-center px-6 py-4 text-gray-700 font-medium hover:bg-blue-50 hover:text-[#007eb4] transition-all duration-300 border-l-4 border-transparent hover:border-[#007eb4] ${
                 mobileOpen
                   ? "translate-x-0 opacity-100"
-                  : "translate-x-4 opacity-0"
+                  : "-translate-x-4 opacity-0"
               }`}
               style={{ transitionDelay: mobileOpen ? "300ms" : "0ms" }}
             >
