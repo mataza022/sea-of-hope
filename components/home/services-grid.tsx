@@ -55,9 +55,9 @@ export function ServicesGrid() {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container">
-        <div className="section-heading">
-          <h2>Our Services</h2>
-          <Link href="/services">All →</Link>
+        {/* Section Heading (removed the All → link) */}
+        <div className="mb-8 pb-4 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">Our Services</h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
