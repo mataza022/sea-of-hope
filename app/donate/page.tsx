@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { donationSchema } from "@/lib/validation";
 
 export default function DonatePage() {
   const [amount, setAmount] = useState(500);
@@ -33,14 +34,25 @@ export default function DonatePage() {
     setLoading(true);
     setError("");
 
+    // Validate with Zod
+    const validation = donationSchema.safeParse({
+      amount,
+      frequency,
+      purpose,
+      donorName: donorInfo.name,
+      donorEmail: donorInfo.email,
+      donorPhone: donorInfo.phone,
+    });
+
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
     try {
       await addDoc(collection(db, "donations"), {
-        amount,
-        frequency,
-        purpose,
-        donorName: donorInfo.name,
-        donorEmail: donorInfo.email,
-        donorPhone: donorInfo.phone,
+        ...validation.data,
         timestamp: serverTimestamp(),
         status: "pending",
       });
@@ -147,6 +159,7 @@ export default function DonatePage() {
             {/* Donation Form */}
             <form
               onSubmit={handleDonate}
+              noValidate
               className="bg-white p-8 rounded-xl shadow-lg space-y-6"
             >
               {/* Frequency */}
@@ -215,7 +228,6 @@ export default function DonatePage() {
                     </label>
                     <input
                       type="text"
-                      required
                       value={donorInfo.name}
                       onChange={(e) =>
                         setDonorInfo({ ...donorInfo, name: e.target.value })
@@ -230,7 +242,6 @@ export default function DonatePage() {
                     </label>
                     <input
                       type="email"
-                      required
                       value={donorInfo.email}
                       onChange={(e) =>
                         setDonorInfo({ ...donorInfo, email: e.target.value })
