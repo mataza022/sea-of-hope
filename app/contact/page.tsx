@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { db } from "@/lib/firebase";
 import { contactSchema } from "@/lib/validation";
+import { Honeypot } from "@/components/shared/honeypot";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -23,7 +25,15 @@ export default function ContactPage() {
     setLoading(true);
     setError("");
 
-    // Validate with Zod
+    // 1. Honeypot check
+    const form = e.target as HTMLFormElement;
+    const honeypot = (form.querySelector("#website_url") as HTMLInputElement)?.value;
+    if (honeypot) {
+      setSubmitted(true);
+      return;
+    }
+
+    // 2. Zod validation
     const validation = contactSchema.safeParse(formData);
     if (!validation.success) {
       setError(validation.error.errors[0].message);
@@ -31,6 +41,18 @@ export default function ContactPage() {
       return;
     }
 
+    // 3. Rate limit
+    try {
+      const functions = getFunctions();
+      const checkRateLimit = httpsCallable(functions, "checkRateLimit");
+      await checkRateLimit({});
+    } catch (rateLimitError: any) {
+      setError(rateLimitError.message || "Too many submissions. Please try later.");
+      setLoading(false);
+      return;
+    }
+
+    // 4. Save
     try {
       await addDoc(collection(db, "contact_messages"), {
         ...validation.data,
@@ -50,58 +72,37 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-16">
-      {/* Hero Section */}
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="/hero.png"
-            alt="Sea of Hope Community"
-            className="w-full h-full object-cover"
-          />
+          <img src="/hero.png" alt="Sea of Hope Community" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#005a8a] via-[#007eb4]/60 to-transparent" />
         </div>
-
         <div className="relative container h-full flex items-center justify-center">
           <div className="text-center text-white max-w-4xl">
             <h1 className="text-3xl md:text-5xl font-bold mb-4">Contact Us</h1>
             <p className="text-lg md:text-xl text-gray-100 max-w-2xl mx-auto">
-              We're here to help. Reach out to us with any questions, concerns,
-              or to get involved in our work.
+              We're here to help. Reach out to us with any questions, concerns, or to get involved in our work.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
       <div className="container py-12">
-        {/* Contact Information Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <div className="bg-[#007eb4]/10 p-4 rounded-full inline-flex mb-4">
               <Phone size={24} className="text-[#007eb4]" />
             </div>
             <h3 className="font-bold mb-2">Call Us</h3>
-            <a
-              href="tel:+254727328122"
-              className="text-gray-600 hover:text-[#007eb4] transition"
-            >
-              0727 328 122
-            </a>
+            <a href="tel:+254727328122" className="text-gray-600 hover:text-[#007eb4] transition">0727 328 122</a>
           </div>
-
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <div className="bg-[#007eb4]/10 p-4 rounded-full inline-flex mb-4">
               <Mail size={24} className="text-[#007eb4]" />
             </div>
             <h3 className="font-bold mb-2">Email Us</h3>
-            <a
-              href="mailto:seaofhopeofficial@gmail.com"
-              className="text-gray-600 hover:text-[#007eb4] transition"
-            >
-              seaofhopeofficial@gmail.com
-            </a>
+            <a href="mailto:seaofhopeofficial@gmail.com" className="text-gray-600 hover:text-[#007eb4] transition">seaofhopeofficial@gmail.com</a>
           </div>
-
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <div className="bg-[#007eb4]/10 p-4 rounded-full inline-flex mb-4">
               <MapPin size={24} className="text-[#007eb4]" />
@@ -111,9 +112,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Contact Form & Map */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Contact Form */}
           <div className="bg-white p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
 
@@ -122,41 +121,29 @@ export default function ContactPage() {
                 <div className="text-5xl mb-4">
                   <Send size={48} className="mx-auto text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-green-800 mb-2">
-                  Message Sent!
-                </h3>
-                <p className="text-green-700">
-                  Thank you for reaching out. We'll get back to you within 24
-                  hours.
-                </p>
+                <h3 className="text-xl font-bold text-green-800 mb-2">Message Sent!</h3>
+                <p className="text-green-700">Thank you for reaching out. We'll get back to you within 24 hours.</p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
+                <Honeypot />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Full Name *
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Full Name *</label>
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="Your name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Email *
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="you@example.com"
                     />
@@ -165,28 +152,20 @@ export default function ContactPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Phone (Optional)
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Phone (Optional)</label>
                     <input
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="07XX XXX XXX"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Subject *
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Subject *</label>
                     <select
                       value={formData.subject}
-                      onChange={(e) =>
-                        setFormData({ ...formData, subject: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                     >
                       <option value="">Select a topic...</option>
@@ -200,24 +179,18 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Message *
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Message *</label>
                   <textarea
                     rows={5}
                     value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                     placeholder="How can we help you?"
                   />
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
-                    {error}
-                  </div>
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">{error}</div>
                 )}
 
                 <button
@@ -232,7 +205,6 @@ export default function ContactPage() {
             )}
           </div>
 
-          {/* Map & Hours */}
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4">Our Location</h2>
@@ -253,51 +225,21 @@ export default function ContactPage() {
 
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4 flex items-center">
-                <Clock size={20} className="mr-2 text-[#007eb4]" />
-                Office Hours
+                <Clock size={20} className="mr-2 text-[#007eb4]" /> Office Hours
               </h2>
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Monday - Friday</span>
-                  <span className="font-bold">8:00 AM - 6:00 PM</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Saturday</span>
-                  <span className="font-bold">9:00 AM - 4:00 PM</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Sunday</span>
-                  <span className="font-bold">Closed</span>
-                </div>
+                <div className="flex justify-between items-center"><span className="text-gray-600">Monday - Friday</span><span className="font-bold">8:00 AM - 6:00 PM</span></div>
+                <div className="flex justify-between items-center"><span className="text-gray-600">Saturday</span><span className="font-bold">9:00 AM - 4:00 PM</span></div>
+                <div className="flex justify-between items-center"><span className="text-gray-600">Sunday</span><span className="font-bold">Closed</span></div>
               </div>
             </div>
 
             <div className="bg-[#005a8a] text-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold mb-4">Quick Contact</h2>
               <div className="space-y-3">
-                <a
-                  href="tel:+254727328122"
-                  className="flex items-center hover:text-gray-200 transition"
-                >
-                  <Phone size={18} className="mr-3" />
-                  Call: 0727 328 122
-                </a>
-                <a
-                  href="https://wa.me/254727328122"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center hover:text-gray-200 transition"
-                >
-                  <MessageCircle size={18} className="mr-3" />
-                  WhatsApp Us
-                </a>
-                <a
-                  href="mailto:seaofhopeofficial@gmail.com"
-                  className="flex items-center hover:text-gray-200 transition"
-                >
-                  <Mail size={18} className="mr-3" />
-                  Email Us
-                </a>
+                <a href="tel:+254727328122" className="flex items-center hover:text-gray-200 transition"><Phone size={18} className="mr-3" />Call: 0727 328 122</a>
+                <a href="https://wa.me/254727328122" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-gray-200 transition"><MessageCircle size={18} className="mr-3" />WhatsApp Us</a>
+                <a href="mailto:seaofhopeofficial@gmail.com" className="flex items-center hover:text-gray-200 transition"><Mail size={18} className="mr-3" />Email Us</a>
               </div>
             </div>
           </div>
