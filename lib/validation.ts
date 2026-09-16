@@ -1,5 +1,3 @@
-cd ~/Documents/sea-of-hope
-cat > lib/validation.ts << 'ENDOFFILE'
 import { z } from "zod";
 
 // Contact form schema
