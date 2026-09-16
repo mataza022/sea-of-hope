@@ -34,7 +34,6 @@ export default function DonatePage() {
     setLoading(true);
     setError("");
 
-    // 1. Honeypot check
     const form = e.target as HTMLFormElement;
     const honeypot = (form.querySelector("#website_url") as HTMLInputElement)?.value;
     if (honeypot) {
@@ -42,7 +41,6 @@ export default function DonatePage() {
       return;
     }
 
-    // 2. Zod validation
     const validation = donationSchema.safeParse({
       amount,
       frequency,
@@ -58,7 +56,6 @@ export default function DonatePage() {
       return;
     }
 
-    // 3. Rate limit
     try {
       const functions = getFunctions();
       const checkRateLimit = httpsCallable(functions, "checkRateLimit");
@@ -69,7 +66,6 @@ export default function DonatePage() {
       return;
     }
 
-    // 4. Save
     try {
       await addDoc(collection(db, "donations"), {
         ...validation.data,
@@ -128,7 +124,6 @@ export default function DonatePage() {
           </div>
         ) : (
           <div className="max-w-2xl mx-auto">
-            {/* Impact Calculator */}
             <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
               <h2 className="text-lg font-bold mb-4">What Your Donation Does</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -161,11 +156,9 @@ export default function DonatePage() {
               />
             </div>
 
-            {/* Donation Form */}
             <form onSubmit={handleDonate} noValidate className="bg-white p-8 rounded-xl shadow-lg space-y-6">
               <Honeypot />
 
-              {/* Frequency */}
               <div>
                 <h2 className="text-lg font-bold mb-3">Frequency</h2>
                 <div className="flex gap-3">
@@ -190,7 +183,6 @@ export default function DonatePage() {
                 </div>
               </div>
 
-              {/* Purpose */}
               <div>
                 <h2 className="text-lg font-bold mb-3">Where Should Your Donation Go?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -215,7 +207,6 @@ export default function DonatePage() {
                 </div>
               </div>
 
-              {/* Donor Info */}
               <div>
                 <h2 className="text-lg font-bold mb-3">Your Information</h2>
                 <div className="space-y-3">
@@ -235,4 +226,66 @@ export default function DonatePage() {
                       type="email"
                       value={donorInfo.email}
                       onChange={(e) => setDonorInfo({ ...donorInfo, email: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Phone (Optional)</label>
+                    <input
+                      type="tel"
+                      value={donorInfo.phone}
+                      onChange={(e) => setDonorInfo({ ...donorInfo, phone: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
+                      placeholder="07XX XXX XXX"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Heart size={18} className="inline mr-2" />
+                {loading ? "Processing..." : `Donate KSh ${amount.toLocaleString()}`}
+              </button>
+
+              <p className="text-center text-sm text-gray-500">
+                Secure payment. Your information is protected.
+              </p>
+            </form>
+
+            <div className="mt-8">
+              <h2 className="text-xl font-bold text-center mb-4">Other Ways to Donate</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-xl shadow-sm">
+                  <h3 className="font-bold mb-2">M-Pesa</h3>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Send to: <span className="font-bold">0727 328 122</span>
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Please include your name and purpose in the message.
+                  </p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm">
+                  <h3 className="font-bold mb-2">Bank Transfer</h3>
+                  <p className="text-sm text-gray-600 mb-2">Contact us for bank details.</p>
+                  <a href="tel:+254727328122" className="text-[#007eb4] font-bold text-sm hover:underline">
+                    <Phone size={14} className="inline mr-1" />
+                    0727 328 122
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
