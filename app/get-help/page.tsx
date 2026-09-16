@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Phone,
   MessageCircle,
@@ -10,8 +9,10 @@ import {
   Shield,
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { db } from "@/lib/firebase";
 import { helpRequestSchema } from "@/lib/validation";
+import { Honeypot } from "@/components/shared/honeypot";
 
 export default function GetHelpPage() {
   const [formStep, setFormStep] = useState(1);
@@ -33,7 +34,15 @@ export default function GetHelpPage() {
     setLoading(true);
     setError("");
 
-    // Validate with Zod
+    // 1. Honeypot check
+    const form = e.target as HTMLFormElement;
+    const honeypot = (form.querySelector("#website_url") as HTMLInputElement)?.value;
+    if (honeypot) {
+      setSubmitted(true);
+      return;
+    }
+
+    // 2. Zod validation
     const validation = helpRequestSchema.safeParse(formData);
     if (!validation.success) {
       setError(validation.error.errors[0].message);
@@ -41,6 +50,18 @@ export default function GetHelpPage() {
       return;
     }
 
+    // 3. Rate limit
+    try {
+      const functions = getFunctions();
+      const checkRateLimit = httpsCallable(functions, "checkRateLimit");
+      await checkRateLimit({});
+    } catch (rateLimitError: any) {
+      setError(rateLimitError.message || "Too many submissions. Please try later.");
+      setLoading(false);
+      return;
+    }
+
+    // 4. Save
     try {
       await addDoc(collection(db, "help_requests"), {
         ...validation.data,
@@ -111,6 +132,8 @@ export default function GetHelpPage() {
             noValidate
             className="bg-white p-8 rounded-xl shadow-lg space-y-6"
           >
+            <Honeypot />
+
             {/* Step 1: Basic Info */}
             {formStep === 1 && (
               <div className="space-y-4">
