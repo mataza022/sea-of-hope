@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Phone, Mail, MapPin, MessageCircle, Send, Clock } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { contactSchema } from "@/lib/validation";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -22,9 +23,17 @@ export default function ContactPage() {
     setLoading(true);
     setError("");
 
+    // Validate with Zod
+    const validation = contactSchema.safeParse(formData);
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
     try {
       await addDoc(collection(db, "contact_messages"), {
-        ...formData,
+        ...validation.data,
         timestamp: serverTimestamp(),
         read: false,
       });
