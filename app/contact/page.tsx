@@ -50,7 +50,7 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-16">
-      {/* Hero Section with Background Image */}
+      {/* Hero Section */}
       <section className="relative h-[400px] md:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
           <img
@@ -74,7 +74,7 @@ export default function ContactPage() {
 
       {/* Main Content */}
       <div className="container py-12">
-        {/* Contact Information */}
+        {/* Contact Information Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white p-6 rounded-xl shadow-lg text-center">
             <div className="bg-[#007eb4]/10 p-4 rounded-full inline-flex mb-4">
@@ -131,7 +131,7 @@ export default function ContactPage() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
@@ -139,7 +139,6 @@ export default function ContactPage() {
                     </label>
                     <input
                       type="text"
-                      required
                       value={formData.name}
                       onChange={(e) =>
                         setFormData({ ...formData, name: e.target.value })
@@ -154,7 +153,6 @@ export default function ContactPage() {
                     </label>
                     <input
                       type="email"
-                      required
                       value={formData.email}
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
@@ -185,7 +183,6 @@ export default function ContactPage() {
                       Subject *
                     </label>
                     <select
-                      required
                       value={formData.subject}
                       onChange={(e) =>
                         setFormData({ ...formData, subject: e.target.value })
@@ -207,7 +204,6 @@ export default function ContactPage() {
                     Message *
                   </label>
                   <textarea
-                    required
                     rows={5}
                     value={formData.message}
                     onChange={(e) =>
