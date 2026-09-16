@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Sea of Hope Organisation",
     description: "Hope for Youth. Hope for Recovery.",
-    url: "https://seaofhope.org",
+    url: "https://seaofhopeafrica.org",
     siteName: "Sea of Hope Organisation",
     locale: "en_KE",
     type: "website",
