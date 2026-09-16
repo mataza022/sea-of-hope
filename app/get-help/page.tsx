@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { helpRequestSchema } from "@/lib/validation";
 
 export default function GetHelpPage() {
   const [formStep, setFormStep] = useState(1);
@@ -32,9 +33,17 @@ export default function GetHelpPage() {
     setLoading(true);
     setError("");
 
+    // Validate with Zod
+    const validation = helpRequestSchema.safeParse(formData);
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
     try {
       await addDoc(collection(db, "help_requests"), {
-        ...formData,
+        ...validation.data,
         timestamp: serverTimestamp(),
         status: "new",
       });
@@ -99,6 +108,7 @@ export default function GetHelpPage() {
         ) : (
           <form
             onSubmit={handleSubmit}
+            noValidate
             className="bg-white p-8 rounded-xl shadow-lg space-y-6"
           >
             {/* Step 1: Basic Info */}
@@ -125,7 +135,6 @@ export default function GetHelpPage() {
                   </label>
                   <input
                     type="number"
-                    required
                     value={formData.age}
                     onChange={(e) =>
                       setFormData({ ...formData, age: e.target.value })
@@ -174,7 +183,6 @@ export default function GetHelpPage() {
                   </label>
                   <input
                     type="tel"
-                    required
                     value={formData.phone}
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
@@ -252,6 +260,13 @@ export default function GetHelpPage() {
                     </label>
                   </div>
                 </div>
+
+                {error && (
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <div className="flex gap-4">
                   <button
                     type="button"
@@ -279,7 +294,6 @@ export default function GetHelpPage() {
                   <label className="flex items-start">
                     <input
                       type="checkbox"
-                      required
                       checked={formData.consent}
                       onChange={(e) =>
                         setFormData({ ...formData, consent: e.target.checked })
