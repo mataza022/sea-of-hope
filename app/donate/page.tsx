@@ -11,14 +11,14 @@ import {
   Phone,
 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import { db } from "@/lib/firebase";
 import { donationSchema } from "@/lib/validation";
+import { Honeypot } from "@/components/shared/honeypot";
 
 export default function DonatePage() {
   const [amount, setAmount] = useState(500);
-  const [frequency, setFrequency] = useState<"one-time" | "monthly">(
-    "one-time"
-  );
+  const [frequency, setFrequency] = useState<"one-time" | "monthly">("one-time");
   const [purpose, setPurpose] = useState("general");
   const [donorInfo, setDonorInfo] = useState({
     name: "",
@@ -34,7 +34,15 @@ export default function DonatePage() {
     setLoading(true);
     setError("");
 
-    // Validate with Zod
+    // 1. Honeypot check
+    const form = e.target as HTMLFormElement;
+    const honeypot = (form.querySelector("#website_url") as HTMLInputElement)?.value;
+    if (honeypot) {
+      setSubmitted(true);
+      return;
+    }
+
+    // 2. Zod validation
     const validation = donationSchema.safeParse({
       amount,
       frequency,
@@ -50,6 +58,18 @@ export default function DonatePage() {
       return;
     }
 
+    // 3. Rate limit
+    try {
+      const functions = getFunctions();
+      const checkRateLimit = httpsCallable(functions, "checkRateLimit");
+      await checkRateLimit({});
+    } catch (rateLimitError: any) {
+      setError(rateLimitError.message || "Too many submissions. Please try later.");
+      setLoading(false);
+      return;
+    }
+
+    // 4. Save
     try {
       await addDoc(collection(db, "donations"), {
         ...validation.data,
@@ -69,11 +89,7 @@ export default function DonatePage() {
 
   const impactOptions = [
     { amount: 500, description: "Provides 2 meals", icon: UtensilsCrossed },
-    {
-      amount: 1000,
-      description: "Provides a counselling session",
-      icon: Heart,
-    },
+    { amount: 1000, description: "Provides a counselling session", icon: Heart },
     { amount: 5000, description: "Supports recovery for a day", icon: Pill },
     { amount: 10000, description: "Funds an outreach visit", icon: MapPin },
   ];
@@ -92,8 +108,7 @@ export default function DonatePage() {
           How Your Donation Helps
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Every contribution helps us rescue, rehabilitate and reintegrate young
-          people in Majengo.
+          Every contribution helps us rescue, rehabilitate and reintegrate young people in Majengo.
         </p>
 
         {submitted ? (
@@ -105,13 +120,9 @@ export default function DonatePage() {
               Thank You for Your Support!
             </h2>
             <p className="text-green-700 mb-6">
-              Your generosity will make a real difference in the lives of people
-              in our community.
+              Your generosity will make a real difference in the lives of people in our community.
             </p>
-            <Link
-              href="/"
-              className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold inline-block"
-            >
+            <Link href="/" className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold inline-block">
               Back to Home
             </Link>
           </div>
@@ -119,9 +130,7 @@ export default function DonatePage() {
           <div className="max-w-2xl mx-auto">
             {/* Impact Calculator */}
             <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
-              <h2 className="text-lg font-bold mb-4">
-                What Your Donation Does
-              </h2>
+              <h2 className="text-lg font-bold mb-4">What Your Donation Does</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {impactOptions.map((option) => {
                   const Icon = option.icon;
@@ -136,12 +145,8 @@ export default function DonatePage() {
                       }`}
                     >
                       <Icon size={24} className="mx-auto mb-2 text-[#007eb4]" />
-                      <div className="font-bold">
-                        KSh {option.amount.toLocaleString()}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {option.description}
-                      </div>
+                      <div className="font-bold">KSh {option.amount.toLocaleString()}</div>
+                      <div className="text-sm text-gray-600">{option.description}</div>
                     </button>
                   );
                 })}
@@ -157,11 +162,9 @@ export default function DonatePage() {
             </div>
 
             {/* Donation Form */}
-            <form
-              onSubmit={handleDonate}
-              noValidate
-              className="bg-white p-8 rounded-xl shadow-lg space-y-6"
-            >
+            <form onSubmit={handleDonate} noValidate className="bg-white p-8 rounded-xl shadow-lg space-y-6">
+              <Honeypot />
+
               {/* Frequency */}
               <div>
                 <h2 className="text-lg font-bold mb-3">Frequency</h2>
@@ -170,9 +173,7 @@ export default function DonatePage() {
                     type="button"
                     onClick={() => setFrequency("one-time")}
                     className={`flex-1 p-3 rounded-lg border-2 transition ${
-                      frequency === "one-time"
-                        ? "border-[#007eb4] bg-blue-50"
-                        : "border-gray-200"
+                      frequency === "one-time" ? "border-[#007eb4] bg-blue-50" : "border-gray-200"
                     }`}
                   >
                     One-Time
@@ -181,9 +182,7 @@ export default function DonatePage() {
                     type="button"
                     onClick={() => setFrequency("monthly")}
                     className={`flex-1 p-3 rounded-lg border-2 transition ${
-                      frequency === "monthly"
-                        ? "border-[#007eb4] bg-blue-50"
-                        : "border-gray-200"
+                      frequency === "monthly" ? "border-[#007eb4] bg-blue-50" : "border-gray-200"
                     }`}
                   >
                     Monthly
@@ -193,9 +192,7 @@ export default function DonatePage() {
 
               {/* Purpose */}
               <div>
-                <h2 className="text-lg font-bold mb-3">
-                  Where Should Your Donation Go?
-                </h2>
+                <h2 className="text-lg font-bold mb-3">Where Should Your Donation Go?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {purposeOptions.map((option) => {
                     const Icon = option.icon;
@@ -223,106 +220,19 @@ export default function DonatePage() {
                 <h2 className="text-lg font-bold mb-3">Your Information</h2>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Full Name *
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Full Name *</label>
                     <input
                       type="text"
                       value={donorInfo.name}
-                      onChange={(e) =>
-                        setDonorInfo({ ...donorInfo, name: e.target.value })
-                      }
+                      onChange={(e) => setDonorInfo({ ...donorInfo, name: e.target.value })}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
                       placeholder="Your name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Email *
-                    </label>
+                    <label className="block text-sm font-medium mb-1">Email *</label>
                     <input
                       type="email"
                       value={donorInfo.email}
-                      onChange={(e) =>
-                        setDonorInfo({ ...donorInfo, email: e.target.value })
-                      }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
-                      placeholder="you@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Phone (Optional)
-                    </label>
-                    <input
-                      type="tel"
-                      value={donorInfo.phone}
-                      onChange={(e) =>
-                        setDonorInfo({ ...donorInfo, phone: e.target.value })
-                      }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007eb4]"
-                      placeholder="07XX XXX XXX"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 p-3 rounded-lg border border-red-200 text-red-700 text-sm">
-                  {error}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#007eb4] text-white px-8 py-4 rounded-lg font-bold w-full hover:bg-[#005a8a] transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Heart size={18} className="inline mr-2" />
-                {loading
-                  ? "Processing..."
-                  : `Donate KSh ${amount.toLocaleString()}`}
-              </button>
-
-              <p className="text-center text-sm text-gray-500">
-                Secure payment. Your information is protected.
-              </p>
-            </form>
-
-            {/* Alternative Donation Methods */}
-            <div className="mt-8">
-              <h2 className="text-xl font-bold text-center mb-4">
-                Other Ways to Donate
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-6 rounded-xl shadow-sm">
-                  <h3 className="font-bold mb-2">M-Pesa</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Send to: <span className="font-bold">0727 328 122</span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Please include your name and purpose in the message.
-                  </p>
-                </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm">
-                  <h3 className="font-bold mb-2">Bank Transfer</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Contact us for bank details.
-                  </p>
-                  <a
-                    href="tel:+254727328122"
-                    className="text-[#007eb4] font-bold text-sm hover:underline"
-                  >
-                    <Phone size={14} className="inline mr-1" />
-                    0727 328 122
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
+                      onChange={(e) => setDonorInfo({ ...donorInfo, email: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg
